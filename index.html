@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#9f412a" />
+<title>城西尋影｜歷史尋跡地圖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<style>
+:root{
+  --bg:#f5f0e9;
+  --paper:#f7f1e7;
+  --card:#fcf7f0;
+  --line:#dbcab7;
+  --line2:#cfb9a2;
+  --ink:#32251d;
+  --muted:#6e6056;
+  --brand:#9c402d;
+  --brand-deep:#7f2f20;
+  --brand-soft:#b86e57;
+  --blue:#bcd0eb;
+  --pink:#f3cdcd;
+  --sand:#f2dfc9;
+  --green:#4f855f;
+  --shadow:0 12px 28px rgba(78,52,33,.12);
+  --font:'Noto Sans TC', system-ui, sans-serif;
+  --en:'Inter', 'Noto Sans TC', sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:linear-gradient(180deg,#f2ede6,#f8f4ee);color:var(--ink);font-family:var(--font)}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:inherit}
+body{min-height:100svh}
+.app{max-width:430px;margin:0 auto;min-height:100svh;background:var(--bg);box-shadow:0 0 28px rgba(0,0,0,.08);display:flex;flex-direction:column}
+.hero{background:radial-gradient(circle at 18% 22%, rgba(255,255,255,.08), transparent 30%),linear-gradient(135deg, #a94731 0%, #973926 40%, #8c321f 100%);padding:18px 18px 16px;color:#fff}
+.hero-row{display:flex;align-items:flex-start;gap:12px}
+.brand{flex:1;min-width:0}
+.title{font-size:34px;line-height:1.02;letter-spacing:.10em;font-weight:900;margin:6px 0 10px}
+.subtitle{font-family:var(--en);font-size:13px;letter-spacing:.22em;color:#f4ded2;font-weight:500}
+.hero-side{display:flex;align-items:flex-start;gap:12px}
+.reel{width:54px;height:54px;border-radius:50%;border:3px solid rgba(253,237,225,.95);position:relative;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.08);animation:spin 7s linear infinite;margin-top:4px}
+.reel:before,.reel:after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%}
+.reel:before{width:14px;height:14px;background:rgba(250,233,220,.92)}
+.reel:after{width:6px;height:6px;background:var(--brand)}
+.reel i{position:absolute;left:50%;top:50%;width:10px;height:10px;background:#f5e6d8;border-radius:50%;transform-origin:0 -18px}
+.reel i:nth-child(1){transform:translate(-50%,-50%) rotate(0deg) translateY(-18px)}
+.reel i:nth-child(2){transform:translate(-50%,-50%) rotate(72deg) translateY(-18px)}
+.reel i:nth-child(3){transform:translate(-50%,-50%) rotate(144deg) translateY(-18px)}
+.reel i:nth-child(4){transform:translate(-50%,-50%) rotate(216deg) translateY(-18px)}
+.reel i:nth-child(5){transform:translate(-50%,-50%) rotate(288deg) translateY(-18px)}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.passport{min-width:104px;border:1.5px solid rgba(253,236,226,.85);border-radius:16px;padding:12px 12px 10px;text-align:center;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.passport .t{font-size:13px;font-weight:800;letter-spacing:.08em}
+.passport .v{font-size:18px;font-weight:900;margin-top:4px}
+.passport .score{font-size:16px;font-weight:800;margin-top:4px}
+.main{display:flex;flex-direction:column;flex:1;min-height:0;padding:14px 14px 12px;gap:12px}
+.axis-card{background:transparent;border:none;padding:0 2px}
+.section-head{font-size:16px;color:var(--brand);font-weight:900;letter-spacing:.08em;margin:0 0 10px}
+.era-strip{background:#f6ecdf;border:1px solid #eadaca;border-radius:18px;padding:12px 10px;display:grid;grid-template-columns:1fr 1fr;gap:0;position:relative;overflow:hidden}
+.era-strip:before{content:"";position:absolute;top:18%;bottom:18%;left:50%;width:1px;background:#d5bca5}
+.era{display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--brand-deep)}
+.era b{font-size:18px;line-height:1.15;letter-spacing:.06em}
+.era span{margin-top:4px;font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.08em;color:#7f4b39}
+.years{position:relative;display:flex;justify-content:space-between;align-items:flex-start;padding:10px 4px 0}
+.years:before{content:"";position:absolute;left:8px;right:8px;top:24px;height:3px;background:#c78f74;border-radius:999px}
+.year{width:20%;text-align:center;position:relative;background:none;border:none;padding:0;color:#42352e}
+.year .dot{width:24px;height:24px;border-radius:50%;border:4px solid #cf9b80;background:#fff8f1;box-shadow:0 0 0 6px var(--bg);margin:2px auto 10px;display:block;position:relative;z-index:1}
+.year span{font-family:var(--en);font-size:15px;font-weight:800;letter-spacing:.03em}
+.year.active .dot{background:var(--brand);border-color:var(--brand)}
+.year.active span{color:var(--brand)}
+.map-card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;flex:1;min-height:0}
+.map-frame{position:relative;border:1px solid var(--line);border-radius:24px;overflow:hidden;flex:1;min-height:420px;background:#ece4da}
+#map{height:100%;width:100%}
+.leaflet-container{font-family:var(--font);background:#e8ddd0}
+.leaflet-pane.leaflet-tile-pane{filter:saturate(.72) brightness(1.03) contrast(.96) sepia(.12)}
+.leaflet-control-zoom{border:none!important;box-shadow:0 10px 22px rgba(55,37,23,.18)!important;margin:16px 0 0 16px!important}
+.leaflet-control-zoom a{width:48px!important;height:48px!important;line-height:45px!important;border:none!important;background:#fffaf5!important;color:var(--brand)!important;font-size:34px;font-weight:700}.leaflet-control-zoom a:first-child{border-radius:15px 15px 0 0}.leaflet-control-zoom a:last-child{border-radius:0 0 15px 15px;border-top:1px solid #ebddd0!important}
+.leaflet-control-attribution{display:none}
+.locate-fab{position:absolute;right:18px;bottom:18px;width:74px;height:74px;border-radius:50%;border:none;background:#fffaf4;box-shadow:0 14px 26px rgba(55,35,23,.22), inset 0 0 0 1px rgba(158,64,44,.14);z-index:500;display:grid;place-items:center}
+.locate-fab .target{width:42px;height:42px;border:3px solid var(--brand);border-radius:50%;position:relative}
+.locate-fab .target:before,.locate-fab .target:after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--brand)}
+.locate-fab .target:before{width:3px;height:42px}.locate-fab .target:after{width:42px;height:3px}
+.locate-fab .dot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;background:var(--brand);border-radius:50%;box-shadow:0 0 0 6px rgba(156,64,45,.08)}
+.marker-pin{width:54px;height:70px;position:relative}
+.marker-pin .head{position:absolute;left:4px;top:0;width:46px;height:46px;border-radius:50%;overflow:hidden;background:#f5ecdf;border:3px solid #fffaf4;box-shadow:0 8px 14px rgba(47,29,20,.18), 0 0 0 1px rgba(125,68,48,.18)}
+.marker-pin .head img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) sepia(.45) contrast(1.05)}
+.marker-pin .head.fallback{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#8b5c44}
+.marker-pin .tip{position:absolute;left:15px;top:34px;width:23px;height:30px;background:linear-gradient(180deg,#c26d43,#8d442d);clip-path:polygon(50% 100%, 0 12%, 100% 12%)}
+.marker-pin .check{position:absolute;right:0;top:2px;width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900;border:2px solid #fffaf4}
+.marker-pin.active .head{box-shadow:0 10px 18px rgba(47,29,20,.24),0 0 0 4px rgba(235,201,174,.9)}
+.sheet-mask{position:fixed;inset:0;background:rgba(28,19,14,.26);opacity:0;pointer-events:none;transition:.24s;z-index:900}
+.sheet-mask.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(108%);width:min(430px, 100vw);background:#fffaf4;border:1px solid var(--line);border-bottom:none;border-radius:28px 28px 0 0;box-shadow:0 -14px 32px rgba(41,23,12,.16);z-index:1000;transition:.24s;max-height:72svh;display:flex;flex-direction:column}
+.sheet.open{transform:translateX(-50%) translateY(0)}
+.handle{width:56px;height:6px;background:#d3c0aa;border-radius:999px;margin:12px auto 8px}
+.sheet-top{padding:0 18px 10px;display:flex;align-items:flex-start;gap:14px;justify-content:space-between}
+.sheet-top small{display:block;color:var(--brand);font-size:13px;font-weight:800;letter-spacing:.08em;margin-bottom:6px}
+.sheet-top h3{margin:0;font-size:30px;line-height:1.05;font-weight:900;letter-spacing:.05em}
+.close{width:50px;height:50px;border-radius:50%;border:1px solid #d6c4b1;background:#fffaf4;color:var(--brand);font-size:28px;flex:none}
+.sheet-scroll{overflow:auto;padding:0 18px 20px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 18px 12px}
+.btn{min-height:52px;border-radius:14px;font-size:18px;font-weight:900;letter-spacing:.03em;border:1px solid var(--brand)}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.secondary{background:#fffaf4;color:var(--brand)}
+.photo{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#e9dfd0}
+.photo img{display:block;width:100%;aspect-ratio:1.7;object-fit:cover;filter:grayscale(1) sepia(.25)}
+.caption{font-size:12px;color:#8a7768;margin:8px 0 10px}
+.meta{font-size:15px;color:#604f44;font-weight:700;margin:0 0 10px}
+.story{font-size:17px;line-height:1.85;color:#4b3d34;margin:0 0 12px}
+.status{font-size:15px;line-height:1.75;background:#f7eee2;border:1px solid #e5d4c2;border-radius:14px;padding:11px 12px;color:#5f4f43;margin:0 0 12px}
+.links{display:flex;gap:16px;flex-wrap:wrap}.links a{text-decoration:none;color:var(--brand);font-size:15px;font-weight:700;border-bottom:1px solid #d3a27d;padding-bottom:2px}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(26,16,12,.42);z-index:1200}
+.overlay.open{display:flex}.dialog{width:min(400px,100%);background:#fffaf4;border:1px solid var(--line);border-radius:24px;box-shadow:0 18px 34px rgba(32,18,12,.18);padding:20px}.dialog h4{margin:0 0 10px;color:var(--brand);font-size:28px;font-weight:900}.dialog p{margin:0;color:#59493d;font-size:16px;line-height:1.8}.dialog-actions{display:flex;gap:10px;margin-top:18px}.dialog-actions button{flex:1;min-height:48px;border-radius:12px;font-weight:800}.dialog-actions .ghost{background:#fffaf4;color:#654d3f;border:1px solid #cfb59c}.dialog-actions .fill{background:var(--brand);color:#fff;border:1px solid var(--brand)}
+.book{width:min(420px,100%);background:#fffaf4;border:1px solid var(--line);border-radius:24px;box-shadow:0 18px 34px rgba(32,18,12,.18);padding:18px;max-height:84svh;overflow:auto}
+.book-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}.book-head h4{margin:0;color:var(--brand);font-size:30px;font-weight:900}.book-head p{margin:6px 0 0;color:#766558;font-size:14px}.book-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.stamp{border:1px dashed #ccb299;border-radius:16px;padding:12px;background:#fffcf7;min-height:112px;position:relative}.stamp small{display:block;color:#8d7b6e;font-size:11px;letter-spacing:.04em}.stamp strong{display:block;margin-top:5px;font-size:19px;line-height:1.25}.stamp em{display:block;font-style:normal;color:#957e6a;font-size:13px;margin-top:7px}.stamp.done:after{content:'尋回';position:absolute;right:8px;bottom:10px;border:2px solid rgba(156,64,45,.8);color:rgba(156,64,45,.84);padding:4px 10px;border-radius:999px;font-size:20px;font-weight:900;transform:rotate(-12deg)}
+.video-card{position:relative;width:min(430px,100%)}.video-card video{width:100%;max-height:72svh;border-radius:16px;background:#000}.video-close{position:absolute;right:10px;top:10px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.42);color:#fff;font-size:24px}
+@media (max-width:390px){.title{font-size:30px}.passport{min-width:96px}.main{padding:12px 12px 10px}.map-frame{min-height:390px}.sheet-top h3{font-size:28px}.btn{font-size:17px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <div class="hero-row">
+      <div class="brand">
+        <div class="title">城西尋影</div>
+        <div class="subtitle">OLD TAIPEI・LOST FRAMES</div>
+      </div>
+      <div class="hero-side">
+        <div class="reel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <button id="passportBtn" class="passport" type="button">
+          <div class="t">集章簿　0／8</div>
+          <div class="score">0 分</div>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="axis-card">
+      <h2 class="section-head">歷史時間軸</h2>
+      <div class="era-strip">
+        <div class="era"><b>日治時期</b><span>1895－1945</span></div>
+        <div class="era"><b>民國時期</b><span>1945～</span></div>
+      </div>
+      <div class="years" id="yearRow"></div>
+    </section>
+
+    <section class="map-card">
+      <div class="map-frame">
+        <div id="map"></div>
+        <button class="locate-fab" id="locateBtn" type="button" aria-label="定位到我的位置">
+          <span class="target"><span class="dot"></span></span>
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="sheet-mask" id="sheetMask"></div>
+<section class="sheet" id="sheet" aria-label="歷史地點故事卡">
+  <div class="handle"></div>
+  <div class="sheet-top">
+    <div>
+      <small id="sheetEra">1950年 · 歷史片段 04 / 08</small>
+      <h3 id="sheetTitle">新世界大戲院</h3>
+    </div>
+    <button class="close" id="closeSheet" type="button">×</button>
+  </div>
+  <div class="actions">
+    <button class="btn primary" id="navBtn" type="button">↗ 步行導航</button>
+    <button class="btn secondary" id="checkBtn" type="button">到點打卡</button>
+  </div>
+  <div class="sheet-scroll">
+    <figure class="photo" id="photoBox"></figure>
+    <div class="caption" id="photoCaption">臺北市立圖書館數位典藏</div>
+    <p class="meta" id="sheetNow"></p>
+    <p class="status" id="sheetStatus"></p>
+    <p class="story" id="sheetStory"></p>
+    <div class="links">
+      <a id="archiveLink" href="#" target="_blank" rel="noopener">查看北市圖館藏</a>
+      <a id="videoLink" href="#" style="display:none">看動圖</a>
+    </div>
+  </div>
+</section>
+
+<div class="overlay" id="dialogOverlay">
+  <div class="dialog">
+    <h4 id="dialogTitle">提示</h4>
+    <p id="dialogText">內容</p>
+    <div class="dialog-actions">
+      <button class="ghost" id="dialogCancel" type="button">取消</button>
+      <button class="fill" id="dialogConfirm" type="button">確認</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="passportOverlay">
+  <div class="book">
+    <div class="book-head">
+      <div>
+        <h4>城西集章簿</h4>
+        <p id="passportSummary">已集 0／8 景 · 0 分</p>
+      </div>
+      <button class="close" id="closePassport" type="button">×</button>
+    </div>
+    <div class="book-grid" id="passportGrid"></div>
+  </div>
+</div>
+
+<div class="overlay" id="videoOverlay">
+  <div class="video-card">
+    <button class="video-close" id="videoClose" type="button">×</button>
+    <video id="videoPlayer" controls playsinline></video>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script>
+(() => {
+  const sites = [
+    {id:'new-st-market',name:'新起街市場',era:'1920年代',year:1920,lat:25.04163,lng:121.50720,radius:70,now:'今・西門紅樓／成都路一帶',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=6506&ctNode=404&mp=3',story:'西門紅樓前身是新起街市場。從市場、劇場到今日的文化地標，這裡一直是城西最熱鬧的場景之一。'},
+    {id:'ximending-street',name:'西門町街景',era:'1930年代',year:1930,lat:25.04258,lng:121.50798,radius:75,now:'今・西門町徒步區一帶',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=588&ctNode=404&mp=3',story:'西門町在 1930 年代已經是時髦街區。比對老照片與今日街景，可以感受到商業中心如何不斷轉變又持續熱鬧。'},
+    {id:'nishi-honganji',name:'西本願寺本堂',era:'1930年代',year:1930,lat:25.03998,lng:121.50589,radius:80,now:'今・西本願寺廣場',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=6617&ctNode=404&mp=3',story:'昔日西本願寺是城西極具代表性的宗教建築。雖然本堂已不復存在，仍能透過照片想像當年寺院的規模。'},
+    {id:'new-world-cinema',name:'新世界大戲院',era:'1950年代',year:1950,lat:25.04113,lng:121.50708,radius:75,now:'今・西寧南路與成都路一帶',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=6507&ctNode=404&mp=3',story:'看電影曾是西門町最重要的娛樂活動之一。到現場尋找老戲院位置，會更容易理解城西的娛樂文化。',video:'today-department-demo'},
+    {id:'longshan-temple',name:'艋舺龍山寺',era:'1950年代',year:1950,lat:25.03732,lng:121.49987,radius:90,now:'今・龍山寺前廣場',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=6624&ctNode=404&mp=3',story:'龍山寺一直是萬華重要的信仰與生活核心。當老照片與現場街景重疊時，你會看到不同年代的城市節奏。'},
+    {id:'zhonghua-market',name:'中華商場',era:'1960年代',year:1960,lat:25.04408,lng:121.50603,radius:90,now:'今・中華路一段',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=6494&ctNode=404&mp=3',story:'過去中華商場沿著中華路綿延排列，如今建築已不在，但它仍是許多人記憶中的重要地標。'},
+    {id:'zhongshan-hall',name:'中山堂',era:'1970年',year:1970,lat:25.04348,lng:121.50957,radius:85,now:'今・延平南路98號',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=4007&ctNode=404&mp=3',story:'中山堂見證了臺北公共生活的變化。從 1970 年的照片，再看看今日同一棟建築，能感受到時代的推移。'},
+    {id:'today-department',name:'今日百貨',era:'1986年',year:1986,lat:25.04368,lng:121.50537,radius:80,now:'今・峨眉街52號一帶',archive:'https://archive.tpml.edu.tw/TaipeiLib/wSite/ct?xItem=0&dataId=7230&ctNode=404&mp=3',story:'今日百貨是許多西門町逛街記憶的一部分。抵達現場後，你也可以播放動圖，看看那段街區記憶被重新喚醒。',video:'today-department-demo'}
+  ];
+  const years = [1920,1930,1950,1960,1970];
+  const $ = id => document.getElementById(id);
+  const key='cx_v16_done';
+  const done = new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+  let selected = null; let userPos = null; let userCircle = null; let userDot = null; let dialogFn = null;
+
+  const yearRow = $('yearRow');
+  years.forEach(y=>{
+    const btn = document.createElement('button');
+    btn.className = 'year';
+    btn.type = 'button';
+    btn.innerHTML = '<span class="dot"></span><span>'+y+'</span>';
+    btn.addEventListener('click', ()=>{
+      const idx = sites.findIndex(s=>s.year===y);
+      if (idx >= 0) selectSite(idx, true);
+    });
+    yearRow.appendChild(btn);
+  });
+  function updateYear(){ [...yearRow.children].forEach((b,i)=> b.classList.toggle('active', selected !== null && years[i] === sites[selected].year)); }
+
+  const passportBtn = $('passportBtn'), passportOverlay = $('passportOverlay'), passportGrid = $('passportGrid');
+  function updatePassport(){
+    passportBtn.querySelector('.t').textContent = `集章簿　${done.size}/${sites.length}`;
+    passportBtn.querySelector('.score').textContent = `${done.size*100} 分`;
+    $('passportSummary').textContent = `已集 ${done.size}／${sites.length} 景 · ${done.size*100} 分`;
+    passportGrid.innerHTML = sites.map((s,i)=>`<div class="stamp ${done.has(s.id)?'done':''}"><small>NO.${String(i+1).padStart(2,'0')} · ${s.era}</small><strong>${s.name}</strong><em>${done.has(s.id)?'已尋回 ＋100':'尚未尋回'}</em></div>`).join('');
+  }
+  passportBtn.addEventListener('click', ()=> passportOverlay.classList.add('open'));
+  $('closePassport').addEventListener('click', ()=> passportOverlay.classList.remove('open'));
+  passportOverlay.addEventListener('click', e=>{ if (e.target === passportOverlay) passportOverlay.classList.remove('open'); });
+
+  const map = L.map('map', {zoomControl:true, preferCanvas:true, zoomSnap:1}).setView([25.0418,121.5059], 15);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+  const markerLayer = L.layerGroup().addTo(map);
+
+  function svgThumb(label, dark=false){
+    const seed = encodeURIComponent(label.slice(0,4));
+    const bg = dark ? '#d7c3a8' : '#efe5d6';
+    const line = dark ? '#674837' : '#775543';
+    const text = dark ? '#604536' : '#684a39';
+    const svg = `
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'>
+        <defs>
+          <filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.05'/></feComponentTransfer></filter>
+        </defs>
+        <rect width='80' height='80' fill='${bg}'/>
+        <rect y='48' width='80' height='32' fill='#cbb297'/>
+        <path d='M0 50 L15 42 L28 47 L40 28 L55 37 L68 24 L80 31 L80 50 Z' fill='${line}' opacity='.9'/>
+        <rect x='8' y='26' width='15' height='18' fill='${line}' opacity='.82'/>
+        <rect x='25' y='20' width='13' height='24' fill='${line}' opacity='.72'/>
+        <rect x='42' y='24' width='12' height='20' fill='${line}' opacity='.78'/>
+        <rect x='57' y='16' width='14' height='28' fill='${line}' opacity='.84'/>
+        <rect y='0' width='80' height='80' filter='url(%23g)'/>
+        <rect x='5' y='5' width='70' height='70' fill='none' stroke='rgba(255,255,255,.55)' stroke-width='2'/>
+        <text x='40' y='67' text-anchor='middle' font-size='8' font-family='Noto Sans TC, sans-serif' fill='${text}' font-weight='700'>${seed}</text>
+      </svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+  function markerIcon(site, active=false){
+    const html = `
+      <div class="marker-pin ${active?'active':''}">
+        <div class="head"><img src="${svgThumb(site.name, active)}" alt=""></div>
+        <div class="tip"></div>
+        ${done.has(site.id) ? '<div class="check">✓</div>' : ''}
+      </div>`;
+    return L.divIcon({className:'', html, iconSize:[54,70], iconAnchor:[27,64]});
+  }
+  function renderMarkers(){
+    markerLayer.clearLayers();
+    sites.forEach((site, idx)=>{
+      const m = L.marker([site.lat, site.lng], {icon: markerIcon(site, selected===idx), zIndexOffset:selected===idx?1000:0});
+      m.on('click', ()=> selectSite(idx, false));
+      markerLayer.addLayer(m);
+    });
+  }
+
+  function hav(a,b){
+    const rad = x=>x*Math.PI/180;
+    const dLat = rad(b.lat-a.lat), dLng = rad(b.lng-a.lng);
+    const p = Math.sin(dLat/2)**2 + Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;
+    return 6371000 * 2 * Math.atan2(Math.sqrt(p), Math.sqrt(1-p));
+  }
+
+  const sheet = $('sheet'), mask = $('sheetMask');
+  function openSheet(){ sheet.classList.add('open'); mask.classList.add('open'); }
+  function closeSheet(){ sheet.classList.remove('open'); mask.classList.remove('open'); }
+  $('closeSheet').addEventListener('click', closeSheet); mask.addEventListener('click', closeSheet);
+
+  const sheetEra = $('sheetEra'), sheetTitle = $('sheetTitle'), sheetNow = $('sheetNow'), sheetStatus = $('sheetStatus'), sheetStory = $('sheetStory'), photoBox = $('photoBox'), photoCaption = $('photoCaption');
+  const archiveLink = $('archiveLink'), videoLink = $('videoLink');
+
+  function currentStatus(site){
+    if (done.has(site.id)) return '✓ 你已找到這個地點，集章簿已蓋章並累積 100 分。';
+    if (!userPos) return '抵達現場後按「到點打卡」即可更新進度；看故事與照片不需要先啟用 GPS。';
+    const d = hav(userPos, site);
+    return `目前距離約 ${d>=1000 ? (d/1000).toFixed(1)+' 公里' : Math.round(d)+' 公尺'}。靠近目的地後可按「到點打卡」。`;
+  }
+
+  function selectSite(index, fly){
+    selected = index;
+    const s = sites[index];
+    sheetEra.textContent = `${s.era} · 歷史片段 ${String(index+1).padStart(2,'0')} / 08`;
+    sheetTitle.textContent = s.name;
+    sheetNow.textContent = s.now;
+    sheetStory.textContent = s.story;
+    sheetStatus.textContent = currentStatus(s);
+    photoBox.innerHTML = `<img src="${svgThumb(s.name, true)}" alt="${s.name}">`;
+    photoCaption.textContent = '臺北市立圖書館數位典藏（示意縮圖）';
+    archiveLink.href = s.archive;
+    videoLink.style.display = (s.video && done.has(s.id)) ? 'inline-block' : 'none';
+    $('checkBtn').disabled = done.has(s.id);
+    $('checkBtn').textContent = done.has(s.id) ? '✓ 已找到' : '到點打卡';
+    if (fly) map.flyTo([s.lat, s.lng], 16, {duration:.5});
+    updateYear(); renderMarkers(); openSheet();
+  }
+
+  const dialog = $('dialogOverlay');
+  function showDialog(title, text, yes='確認', no='取消', fn=null){
+    $('dialogTitle').textContent = title; $('dialogText').textContent = text; $('dialogConfirm').textContent = yes; $('dialogCancel').textContent = no; dialogFn = fn; dialog.classList.add('open');
+  }
+  function closeDialog(){ dialog.classList.remove('open'); dialogFn = null; }
+  $('dialogCancel').addEventListener('click', closeDialog);
+  $('dialogConfirm').addEventListener('click', ()=>{ const fn = dialogFn; closeDialog(); if(fn) fn(); });
+  dialog.addEventListener('click', e=>{ if(e.target===dialog) closeDialog(); });
+
+  function setUser(pos){
+    userPos = {lat:pos.coords.latitude, lng:pos.coords.longitude, accuracy:pos.coords.accuracy};
+    if (!userCircle){
+      userCircle = L.circle([userPos.lat,userPos.lng], {radius: Math.max(20,userPos.accuracy), color:'transparent', fillColor:'#82aef3', fillOpacity:.24}).addTo(map);
+      userDot = L.circleMarker([userPos.lat,userPos.lng], {radius:8, color:'#fff', weight:4, fillColor:'#3477f6', fillOpacity:1}).addTo(map);
+    }
+    userCircle.setLatLng([userPos.lat,userPos.lng]).setRadius(Math.max(20,userPos.accuracy));
+    userDot.setLatLng([userPos.lat,userPos.lng]);
+    if (selected!==null) sheetStatus.textContent = currentStatus(sites[selected]);
+  }
+
+  function requestLoc(after){
+    if (!navigator.geolocation){ showDialog('無法定位', '此裝置不支援定位功能。', '知道了', '關閉'); return; }
+    if (!window.isSecureContext){ showDialog('需要安全網址', '請以 HTTPS 網址開啟網站，才能使用手機 GPS。', '知道了', '關閉'); return; }
+    navigator.geolocation.getCurrentPosition(pos=>{ setUser(pos); if(after) after(pos); }, err=>{
+      const msg = err.code===1 ? '你拒絕了位置權限，請到瀏覽器的網站設定重新允許。' : err.code===2 ? '目前抓不到 GPS，請移到較開闊的位置再試。' : '定位逾時，請再試一次。';
+      showDialog('定位未成功', msg, '知道了', '關閉');
+    }, {enableHighAccuracy:true, maximumAge:3000, timeout:15000});
+  }
+
+  function stampSite(s){
+    if(done.has(s.id)) return;
+    done.add(s.id);
+    localStorage.setItem(key, JSON.stringify([...done]));
+    updatePassport(); renderMarkers();
+    if(selected!==null) sheetStatus.textContent = currentStatus(sites[selected]);
+    $('checkBtn').disabled = true; $('checkBtn').textContent = '✓ 已找到';
+    if(s.video) videoLink.style.display = 'inline-block';
+    showDialog('到囉！', `你已成功找到「${s.name}」，已加入集章簿並獲得 100 分。`, '查看集章簿', '繼續探索', ()=> passportOverlay.classList.add('open'));
+  }
+
+  function verify(pos){
+    const s = sites[selected];
+    const d = hav({lat:pos.coords.latitude,lng:pos.coords.longitude}, s);
+    if(d > s.radius){ showDialog('還沒到喔', `你目前距離「${s.name}」約 ${Math.round(d)} 公尺。靠近一點再按一次「到點打卡」。`, '繼續尋找', '關閉'); return; }
+    stampSite(s);
+  }
+
+  $('locateBtn').addEventListener('click', ()=> requestLoc(pos=> map.flyTo([pos.coords.latitude,pos.coords.longitude], 16, {duration:.5})));
+  $('navBtn').addEventListener('click', ()=>{ if(selected===null) return; const s=sites[selected]; window.open(`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=walking`,'_blank','noopener'); });
+  $('checkBtn').addEventListener('click', ()=>{
+    if(selected===null || done.has(sites[selected].id)) return;
+    showDialog('啟用 GPS 打卡？', '我們只會在你按下打卡時取得一次位置，用來確認你是否抵達這個歷史地點。', '啟用並打卡', '暫不啟用', ()=> requestLoc(verify));
+  });
+  videoLink.addEventListener('click', e=>{ e.preventDefault(); $('videoOverlay').classList.add('open'); $('videoPlayer').src=''; });
+  $('videoClose').addEventListener('click', ()=>{ $('videoPlayer').pause(); $('videoOverlay').classList.remove('open'); });
+  $('videoOverlay').addEventListener('click', e=>{ if(e.target===$('videoOverlay')) $('videoOverlay').classList.remove('open'); });
+
+  updatePassport(); renderMarkers(); updateYear();
+})();
+</script>
+</body>
+</html>
